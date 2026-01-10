@@ -17,14 +17,14 @@
     <dependencies>
         <dependency>
             <groupId>net.minecraft</groupId>
-            <artifactId>1.5.2</artifactId>
+            <artifactId>minecraft-1.5</artifactId>
             <version>1.5.2</version>
             <scope>system</scope>
             <systemPath>${pom.basedir}/libraries/1.5.2.jar</systemPath>
         </dependency>
         <dependency>
             <groupId>net.minecraft</groupId>
-            <artifactId>1.6.4</artifactId>
+            <artifactId>minecraft-1.6</artifactId>
             <version>1.6.4</version>
             <scope>system</scope>
             <systemPath>${pom.basedir}/libraries/1.6.4.jar</systemPath>
