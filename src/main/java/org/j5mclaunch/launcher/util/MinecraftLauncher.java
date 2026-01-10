@@ -139,15 +139,19 @@ public class MinecraftLauncher {
         l.requestFocus();
         l.setBounds(5,0,645,25);
         f.add(l);
+        JLabel l2 = new JLabel("Due to some changes M$ made, you will have to be quick about it before the URL modifies itself.");
+        l2.requestFocus();
+        l2.setBounds(5,25,645,25);
+        f.add(l2);
         JTextField t = new JTextField(MinecraftAuth.manualUrl);
         t.setEditable(false);
-        t.setBounds(0,25,650,25);
+        t.setBounds(0,50,650,25);
         f.add(t);
         final JTextField t1 = new JTextField();
-        t1.setBounds(0,50,650,25);
+        t1.setBounds(0,75,650,25);
         f.add(t1);
         JButton done = new JButton("Done");
-        done.setBounds((650/2),75,100,25);
+        done.setBounds((650/2),100,100,25);
         done.addActionListener(
                 new ActionListener() {
                     public void actionPerformed(ActionEvent e) {
@@ -172,7 +176,7 @@ public class MinecraftLauncher {
                 });
         f.add(done);
         JButton copy = new JButton("Open URL");
-        copy.setBounds((650/2) - 100,75,100,25);
+        copy.setBounds((650/2) - 100,100,100,25);
         copy.addActionListener(
                 new ActionListener() {
                     public void actionPerformed(ActionEvent e) {
@@ -355,6 +359,10 @@ public class MinecraftLauncher {
             args.add("-Dhttp.proxyHost="+urls.getString("betacraft"));
             args.add("-Djava.util.Arrays.useLegacyMergeSort=true");
         }
+        File agentFile = new File(mcHome+"/agents/"+v+".jar");
+        if (agentFile.exists()) {
+            args.add("-javaagent:"+mcHome+"/agents/"+v+".jar");
+        }
         int ramToUse = (Helper.getRamAmount()/2);
         ramToUse = ramToUse - (ramToUse%128) + 128;
         if (ramToUse > 4096) {
@@ -383,7 +391,6 @@ public class MinecraftLauncher {
         args.add("-cp");
         if (isWindows()) args.add(classPathStr);
         else args.add(classPathStr.replace(";",":"));
-        //args.add("net.minecraft.client.Minecraft");
         args.add("org.j5mclaunch.shim.Launch");
 
         args.add(userName);
