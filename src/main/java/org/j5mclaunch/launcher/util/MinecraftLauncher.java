@@ -363,14 +363,35 @@ public class MinecraftLauncher {
         if (agentFile.exists()) {
             args.add("-javaagent:"+mcHome+"/agents/"+v+".jar");
         }
-        int ramToUse = (Helper.getRamAmount()/2);
-        ramToUse = ramToUse - (ramToUse%128) + 128;
-        if (ramToUse > 4096) {
-            ramToUse = 4096;
+        
+        // Use profile memory allocation if set, otherwise auto-calculate
+        int ramToUse;
+        if (LauncherProfile.memoryAllocation > 0) {
+            ramToUse = LauncherProfile.memoryAllocation;
+        } else {
+            ramToUse = (Helper.getRamAmount()/2);
+            ramToUse = ramToUse - (ramToUse%128) + 128;
+        }
+        
+        // Ensure memory is within reasonable bounds
+        if (ramToUse > 8192) {
+            ramToUse = 8192;
         } else if (ramToUse < 256) {
             ramToUse = 256;
         }
+        
         args.add("-Xmx"+ramToUse+"M");
+        
+        // Add custom Java arguments if specified
+        if (!LauncherProfile.javaArguments.isEmpty()) {
+            String[] customArgs = LauncherProfile.javaArguments.split(" ");
+            for (String arg : customArgs) {
+                if (!arg.trim().isEmpty()) {
+                    args.add(arg.trim());
+                }
+            }
+        }
+        
         if (getJavaVer() <= 11) {
             args.add("-XX:+UseConcMarkSweepGC");
             args.add("-XX:+UseTLAB");

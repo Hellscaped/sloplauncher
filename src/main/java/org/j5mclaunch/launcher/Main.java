@@ -22,8 +22,82 @@ public class Main {
     public static JButton login;
     static JCheckBox proxy;
     static JComboBox<String> vs;
+    static JTextArea newsArea;
     public static MinecraftLauncher mclaunch;
     private static String ver = "1.2.5";
+    
+    private static void showSettingsDialog() {
+        JDialog settingsDialog = new JDialog(frame, "Settings", true);
+        settingsDialog.setSize(400, 300);
+        settingsDialog.setLocationRelativeTo(frame);
+        settingsDialog.setLayout(new BorderLayout());
+        
+        JPanel settingsPanel = new JPanel();
+        settingsPanel.setLayout(new BoxLayout(settingsPanel, BoxLayout.Y_AXIS));
+        settingsPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        
+        // Memory allocation setting
+        JPanel memoryPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        memoryPanel.add(new JLabel("Memory Allocation (MB):"));
+        JTextField memoryField = new JTextField(String.valueOf(LauncherProfile.memoryAllocation), 10);
+        memoryPanel.add(memoryField);
+        settingsPanel.add(memoryPanel);
+        
+        // Java arguments setting
+        JPanel argsPanel = new JPanel(new BorderLayout());
+        argsPanel.setBorder(BorderFactory.createEmptyBorder(10, 0, 10, 0));
+        argsPanel.add(new JLabel("Java Arguments:"), BorderLayout.NORTH);
+        JTextField argsField = new JTextField(LauncherProfile.javaArguments);
+        argsPanel.add(argsField, BorderLayout.CENTER);
+        settingsPanel.add(argsPanel);
+        
+        // Profile name setting
+        JPanel profilePanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        profilePanel.add(new JLabel("Profile Name:"));
+        JTextField profileField = new JTextField(LauncherProfile.profileName, 15);
+        profilePanel.add(profileField);
+        settingsPanel.add(profilePanel);
+        
+        // Info label
+        JLabel infoLabel = new JLabel("<html><i>Note: Changes are saved automatically</i></html>");
+        settingsPanel.add(infoLabel);
+        
+        settingsDialog.add(settingsPanel, BorderLayout.CENTER);
+        
+        // Button panel
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        JButton saveButton = new JButton("Save");
+        saveButton.addActionListener(e -> {
+            try {
+                int memory = Integer.parseInt(memoryField.getText());
+                if (memory < 256 || memory > 8192) {
+                    JOptionPane.showMessageDialog(settingsDialog, 
+                        "Memory allocation must be between 256 and 8192 MB", 
+                        "Invalid Input", 
+                        JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+                LauncherProfile.setMemoryAllocation(memory);
+                LauncherProfile.setJavaArguments(argsField.getText());
+                LauncherProfile.setProfileName(profileField.getText());
+                settingsDialog.dispose();
+            } catch (NumberFormatException ex) {
+                JOptionPane.showMessageDialog(settingsDialog, 
+                    "Please enter a valid number for memory allocation", 
+                    "Invalid Input", 
+                    JOptionPane.ERROR_MESSAGE);
+            }
+        });
+        buttonPanel.add(saveButton);
+        
+        JButton cancelButton = new JButton("Cancel");
+        cancelButton.addActionListener(e -> settingsDialog.dispose());
+        buttonPanel.add(cancelButton);
+        
+        settingsDialog.add(buttonPanel, BorderLayout.SOUTH);
+        settingsDialog.setVisible(true);
+    }
+    
     public static void main(String[] args) {
         if (Helper.isOSX()) {
             System.setProperty("apple.laf.useScreenMenuBar", "true");
@@ -72,6 +146,31 @@ public class Main {
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.getContentPane().setPreferredSize(new Dimension(600, 400));
         frame.pack();
+        
+        // Create menu bar
+        JMenuBar menuBar = new JMenuBar();
+        JMenu fileMenu = new JMenu("File");
+        JMenuItem settingsItem = new JMenuItem("Settings");
+        settingsItem.addActionListener(e -> showSettingsDialog());
+        fileMenu.add(settingsItem);
+        fileMenu.addSeparator();
+        JMenuItem exitItem = new JMenuItem("Exit");
+        exitItem.addActionListener(e -> System.exit(0));
+        fileMenu.add(exitItem);
+        menuBar.add(fileMenu);
+        
+        JMenu helpMenu = new JMenu("Help");
+        JMenuItem aboutItem = new JMenuItem("About");
+        aboutItem.addActionListener(e -> JOptionPane.showMessageDialog(frame,
+            "j5mclaunch v3.1\n\nA modern Minecraft launcher for legacy versions\n" +
+            "Supporting versions from Alpha to Release 1.5.2\n\n" +
+            "Created for compatibility with older Java versions",
+            "About j5mclaunch",
+            JOptionPane.INFORMATION_MESSAGE));
+        helpMenu.add(aboutItem);
+        menuBar.add(helpMenu);
+        
+        frame.setJMenuBar(menuBar);
 
         mclaunch.setupMinecraftFolder();
 
@@ -102,6 +201,7 @@ public class Main {
                     public void actionPerformed(ActionEvent e) {
                         ver = vs.getSelectedItem().toString();
                         LauncherProfile.setVersion(ver);
+                        updateVersionInfo(ver);
                     }
                 });
         statusPanel.add(vs, BorderLayout.EAST);
@@ -109,15 +209,17 @@ public class Main {
 
         // Center panel - News/Updates section
         JPanel newsPanel = new JPanel(new BorderLayout());
-        newsPanel.setBorder(BorderFactory.createTitledBorder("Latest Updates"));
-        JTextArea newsArea = new JTextArea();
+        newsPanel.setBorder(BorderFactory.createTitledBorder("Latest Updates & Version Info"));
+        newsArea = new JTextArea();
         newsArea.setText("Welcome to j5mclaunch!\n\n" +
                 "This is a modern Minecraft launcher supporting versions from Alpha to Release 1.5.2.\n\n" +
                 "Features:\n" +
                 "- Microsoft account authentication\n" +
                 "- Automatic asset and library downloads\n" +
                 "- Betacraft proxy support for legacy online play\n" +
-                "- Compatible with older Java versions\n\n" +
+                "- Compatible with older Java versions\n" +
+                "- Memory allocation and Java arguments customization\n" +
+                "- Profile management\n\n" +
                 "Select a version from the dropdown above and click Launch to play!");
         newsArea.setEditable(false);
         newsArea.setLineWrap(true);
@@ -180,8 +282,40 @@ public class Main {
         frame.add(bottomPanel, BorderLayout.SOUTH);
 
         frame.setVisible(true);
+        updateVersionInfo(ver);
         mclaunch.refreshAuth();
     }
+    
+    private static void updateVersionInfo(String version) {
+        String info = "Selected Version: " + version + "\n\n";
+        
+        // Add version-specific information
+        if (version.startsWith("a")) {
+            info += "Alpha Version - Very early Minecraft version\n";
+            info += "Note: Limited features and may have bugs\n";
+        } else if (version.startsWith("b")) {
+            info += "Beta Version - More stable than Alpha\n";
+            info += "Note: Many classic features from this era\n";
+        } else if (version.matches("1\\.[0-5].*")) {
+            info += "Release Version - Official stable release\n";
+            info += "Note: Fully featured classic Minecraft\n";
+        }
+        
+        info += "\nMemory Allocated: " + LauncherProfile.memoryAllocation + " MB\n";
+        info += "Profile: " + LauncherProfile.profileName + "\n";
+        
+        if (LauncherProfile.betacraftProxy) {
+            info += "\n✓ Betacraft Proxy Enabled\n";
+            info += "  (Skins and online mode support)\n";
+        }
+        
+        info += "\n---\n\n";
+        info += "Ready to launch! Click the Launch button to start playing.\n";
+        info += "Use File → Settings to customize memory and Java arguments.";
+        
+        newsArea.setText(info);
+    }
+    
     public static void setStatus(String txt) {
         status.setText(txt);
         status.repaint();
