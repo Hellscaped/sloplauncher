@@ -57,7 +57,7 @@ public class Main {
         LauncherProfile.loadProfile();
         frame = new JFrame("j5mclaunch");
 
-        frame.setSize(300,75);
+        frame.setSize(600,400);
         frame.setName("j5mclaunch");
         frame.setTitle("Minecraft Launcher");
         try {
@@ -66,22 +66,99 @@ public class Main {
             System.out.println("Failed to set window icon! :(");
             System.out.println(ex);
         }
-        frame.setResizable(false);
-        frame.setLayout(null);
+        frame.setResizable(true);
+        frame.setLayout(new BorderLayout());
         frame.setLocationRelativeTo(null);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.getContentPane().setPreferredSize(new Dimension(300, 75));
+        frame.getContentPane().setPreferredSize(new Dimension(600, 400));
         frame.pack();
-
-        status = new JLabel("Please log in to play.");
-        status.setBounds(10,5,180,25);
-        status.setVisible(true);
-        frame.add(status);
 
         mclaunch.setupMinecraftFolder();
 
+        // Create main panels
+        JPanel topPanel = new JPanel(new BorderLayout());
+        topPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        
+        JPanel centerPanel = new JPanel(new BorderLayout());
+        centerPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        
+        JPanel bottomPanel = new JPanel(new BorderLayout());
+        bottomPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+
+        // Top panel - Status and version selector
+        JPanel statusPanel = new JPanel(new BorderLayout());
+        status = new JLabel("Please log in to play.");
+        status.setFont(status.getFont().deriveFont(14.0f));
+        statusPanel.add(status, BorderLayout.WEST);
+        
+        String[] clientVers = mclaunch.getClientVersions();
+        vs = new JComboBox<String>(clientVers);
+        vs.setPreferredSize(new Dimension(120, 25));
+        vs.setSelectedIndex(3);
+        vs.setSelectedIndex(Arrays.asList(clientVers).indexOf(LauncherProfile.selectedVersion));
+        ver = LauncherProfile.selectedVersion;
+        vs.addActionListener(
+                new ActionListener() {
+                    public void actionPerformed(ActionEvent e) {
+                        ver = vs.getSelectedItem().toString();
+                        LauncherProfile.setVersion(ver);
+                    }
+                });
+        statusPanel.add(vs, BorderLayout.EAST);
+        topPanel.add(statusPanel, BorderLayout.NORTH);
+
+        // Center panel - News/Updates section
+        JPanel newsPanel = new JPanel(new BorderLayout());
+        newsPanel.setBorder(BorderFactory.createTitledBorder("Latest Updates"));
+        JTextArea newsArea = new JTextArea();
+        newsArea.setText("Welcome to j5mclaunch!\n\n" +
+                "This is a modern Minecraft launcher supporting versions from Alpha to Release 1.5.2.\n\n" +
+                "Features:\n" +
+                "- Microsoft account authentication\n" +
+                "- Automatic asset and library downloads\n" +
+                "- Betacraft proxy support for legacy online play\n" +
+                "- Compatible with older Java versions\n\n" +
+                "Select a version from the dropdown above and click Launch to play!");
+        newsArea.setEditable(false);
+        newsArea.setLineWrap(true);
+        newsArea.setWrapStyleWord(true);
+        newsArea.setBackground(frame.getBackground());
+        JScrollPane newsScroll = new JScrollPane(newsArea);
+        newsPanel.add(newsScroll, BorderLayout.CENTER);
+        centerPanel.add(newsPanel, BorderLayout.CENTER);
+
+        // Bottom panel - Options and launch button
+        JPanel optionsPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        proxy = new JCheckBox("Betacraft Proxy");
+        proxy.setToolTipText("Fixes skins, needed for online mode on b1.7.3");
+        proxy.setSelected(LauncherProfile.betacraftProxy);
+        proxy.addActionListener(
+                new ActionListener() {
+                    public void actionPerformed(ActionEvent e) {
+                        LauncherProfile.setProxyEnabled(proxy.isSelected());
+                    }
+                });
+        optionsPanel.add(proxy);
+        bottomPanel.add(optionsPanel, BorderLayout.WEST);
+
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        
+        login = new JButton("Login");
+        login.setPreferredSize(new Dimension(100, 30));
+        login.addActionListener(
+                new ActionListener() {
+                    public void actionPerformed(ActionEvent e) {
+                        if (mclaunch.userName == "" || mclaunch.plrUuid == "") {
+                            mclaunch.login();
+                        }
+                    }
+                });
+        login.setVisible(false);
+        login.setEnabled(false);
+        buttonPanel.add(login);
+
         launch = new JButton("Launch");
-        launch.setBounds(195,45,100,25);
+        launch.setPreferredSize(new Dimension(100, 30));
         launch.setVisible(false);
         launch.setEnabled(false);
         launch.addActionListener(
@@ -94,50 +171,13 @@ public class Main {
                         }
                     }
                 });
-        frame.add(launch);
+        buttonPanel.add(launch);
+        bottomPanel.add(buttonPanel, BorderLayout.EAST);
 
-        login = new JButton("Login");
-        login.setBounds(195,45,100,25);
-        login.addActionListener(
-                new ActionListener() {
-                    public void actionPerformed(ActionEvent e) {
-                        if (mclaunch.userName == "" || mclaunch.plrUuid == "") {
-                            mclaunch.login();
-                        }
-                    }
-                });
-        login.setVisible(false);
-        login.setEnabled(false);
-        frame.add(login);
-        String[] clientVers = mclaunch.getClientVersions();
-        vs = new JComboBox<String>(clientVers);
-        //vs.setBounds(5,45,100,25);
-        vs.setBounds(195,15,100,25);
-        vs.setVisible(true);
-        vs.setSelectedIndex(3);
-        vs.setSelectedIndex(Arrays.asList(clientVers).indexOf(LauncherProfile.selectedVersion));
-        ver = LauncherProfile.selectedVersion;
-        vs.addActionListener(
-                new ActionListener() {
-                    public void actionPerformed(ActionEvent e) {
-                        ver = vs.getSelectedItem().toString();
-                        LauncherProfile.setVersion(ver);
-                    }
-                });
-        frame.add(vs);
-
-        proxy = new JCheckBox("Betacraft Proxy");
-        proxy.createToolTip().setTipText("Fixes skins, needed for online mode on b1.7.3");
-        proxy.setSelected(LauncherProfile.betacraftProxy);
-        proxy.addActionListener(
-                new ActionListener() {
-                    public void actionPerformed(ActionEvent e) {
-                        LauncherProfile.setProxyEnabled(proxy.isSelected());
-                    }
-                });
-        proxy.setBounds(5,45,125,25);
-        proxy.setVisible(true);
-        frame.add(proxy);
+        // Add panels to frame
+        frame.add(topPanel, BorderLayout.NORTH);
+        frame.add(centerPanel, BorderLayout.CENTER);
+        frame.add(bottomPanel, BorderLayout.SOUTH);
 
         frame.setVisible(true);
         mclaunch.refreshAuth();
@@ -145,18 +185,12 @@ public class Main {
     public static void setStatus(String txt) {
         status.setText(txt);
         status.repaint();
-        status.revalidate();
-        status.paintImmediately(status.getVisibleRect());
-        frame.repaint();
     }
     public static void setPlayEnabled() {
         login.setVisible(false);
         login.setEnabled(false);
         launch.setVisible(true);
         launch.setEnabled(true);
-        launch.revalidate();
-        launch.repaint();
-        launch.paintImmediately(launch.getVisibleRect());
         frame.repaint();
     }
     public static void setPlayDisabled() {
@@ -164,9 +198,6 @@ public class Main {
         login.setEnabled(true);
         launch.setVisible(false);
         launch.setEnabled(false);
-        launch.revalidate();
-        launch.repaint();
-        launch.paintImmediately(launch.getVisibleRect());
         frame.repaint();
     }
 }
