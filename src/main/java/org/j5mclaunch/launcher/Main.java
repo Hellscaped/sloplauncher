@@ -23,6 +23,7 @@ public class Main {
     static JCheckBox proxy;
     static JComboBox<String> vs;
     static JTextArea newsArea;
+    static JPanel recentVersionsPanel;
     public static MinecraftLauncher mclaunch;
     private static String ver = "1.2.5";
     
@@ -194,7 +195,10 @@ public class Main {
         vs = new JComboBox<String>(clientVers);
         vs.setPreferredSize(new Dimension(120, 25));
         vs.setSelectedIndex(3);
-        vs.setSelectedIndex(Arrays.asList(clientVers).indexOf(LauncherProfile.selectedVersion));
+        int selectedIndex = Arrays.asList(clientVers).indexOf(LauncherProfile.selectedVersion);
+        if (selectedIndex >= 0) {
+            vs.setSelectedIndex(selectedIndex);
+        }
         ver = LauncherProfile.selectedVersion;
         vs.addActionListener(
                 new ActionListener() {
@@ -202,10 +206,16 @@ public class Main {
                         ver = vs.getSelectedItem().toString();
                         LauncherProfile.setVersion(ver);
                         updateVersionInfo(ver);
+                        updateRecentVersionsPanel();
                     }
                 });
-        statusPanel.add(vs, BorderLayout.EAST);
         topPanel.add(statusPanel, BorderLayout.NORTH);
+        
+        // Add recent versions panel
+        recentVersionsPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        recentVersionsPanel.setBorder(BorderFactory.createTitledBorder("Recent Versions"));
+        updateRecentVersionsPanel();
+        topPanel.add(recentVersionsPanel, BorderLayout.SOUTH);
 
         // Center panel - News/Updates section
         JPanel newsPanel = new JPanel(new BorderLayout());
@@ -250,7 +260,7 @@ public class Main {
         login.addActionListener(
                 new ActionListener() {
                     public void actionPerformed(ActionEvent e) {
-                        if (mclaunch.userName == "" || mclaunch.plrUuid == "") {
+                        if (mclaunch.userName.isEmpty() || mclaunch.plrUuid.isEmpty()) {
                             mclaunch.login();
                         }
                     }
@@ -314,6 +324,29 @@ public class Main {
         info += "Use File → Settings to customize memory and Java arguments.";
         
         newsArea.setText(info);
+    }
+    
+    private static void updateRecentVersionsPanel() {
+        recentVersionsPanel.removeAll();
+        java.util.List<String> recents = LauncherProfile.getRecentVersions();
+        
+        if (recents.isEmpty()) {
+            recentVersionsPanel.add(new JLabel("No recent versions"));
+        } else {
+            for (final String version : recents) {
+                JButton versionButton = new JButton(version);
+                versionButton.setPreferredSize(new Dimension(80, 25));
+                versionButton.addActionListener(new ActionListener() {
+                    public void actionPerformed(ActionEvent e) {
+                        vs.setSelectedItem(version);
+                    }
+                });
+                recentVersionsPanel.add(versionButton);
+            }
+        }
+        
+        recentVersionsPanel.revalidate();
+        recentVersionsPanel.repaint();
     }
     
     public static void setStatus(String txt) {
