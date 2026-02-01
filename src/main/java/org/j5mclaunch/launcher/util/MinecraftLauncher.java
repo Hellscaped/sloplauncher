@@ -131,8 +131,8 @@ public class MinecraftLauncher {
         final JFrame f = new JFrame();
         f.setLayout(null);
         f.setLocationRelativeTo(null);
-        f.setSize(650,75);
-        f.getContentPane().setPreferredSize(new Dimension(650, 100));
+        f.setSize(650,150);
+        f.getContentPane().setPreferredSize(new Dimension(650, 150));
         f.pack();
         f.setResizable(false);
         JLabel l = new JLabel("Go to the following URL and sign in. Copy the URL of the blank page afterwards and paste it into the other box");
@@ -363,14 +363,35 @@ public class MinecraftLauncher {
         if (agentFile.exists()) {
             args.add("-javaagent:"+mcHome+"/agents/"+v+".jar");
         }
-        int ramToUse = (Helper.getRamAmount()/2);
-        ramToUse = ramToUse - (ramToUse%128) + 128;
-        if (ramToUse > 4096) {
-            ramToUse = 4096;
+        
+        // Use profile memory allocation if set, otherwise auto-calculate
+        int ramToUse;
+        if (LauncherProfile.memoryAllocation > 0) {
+            ramToUse = LauncherProfile.memoryAllocation;
+        } else {
+            ramToUse = (Helper.getRamAmount()/2);
+            ramToUse = ramToUse - (ramToUse%128) + 128;
+        }
+        
+        // Ensure memory is within reasonable bounds
+        if (ramToUse > 8192) {
+            ramToUse = 8192;
         } else if (ramToUse < 256) {
             ramToUse = 256;
         }
+        
         args.add("-Xmx"+ramToUse+"M");
+        
+        // Add custom Java arguments if specified
+        if (!LauncherProfile.javaArguments.isEmpty()) {
+            String[] customArgs = LauncherProfile.javaArguments.split(" ");
+            for (String arg : customArgs) {
+                if (!arg.trim().isEmpty()) {
+                    args.add(arg.trim());
+                }
+            }
+        }
+        
         if (getJavaVer() <= 11) {
             args.add("-XX:+UseConcMarkSweepGC");
             args.add("-XX:+UseTLAB");

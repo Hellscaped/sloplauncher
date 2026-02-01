@@ -9,8 +9,8 @@
     <version>3.1</version>
 
     <properties>
-        <maven.compiler.source>5</maven.compiler.source>
-        <maven.compiler.target>5</maven.compiler.target>
+        <maven.compiler.source>8</maven.compiler.source>
+        <maven.compiler.target>8</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
@@ -21,6 +21,7 @@
             <version>1.5.2</version>
             <scope>system</scope>
             <systemPath>${pom.basedir}/libraries/1.5.2.jar</systemPath>
+            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>net.minecraft</groupId>
@@ -28,11 +29,22 @@
             <version>1.6.4</version>
             <scope>system</scope>
             <systemPath>${pom.basedir}/libraries/1.6.4.jar</systemPath>
+            <optional>true</optional>
         </dependency>
     </dependencies>
 
     <build>
         <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.13.0</version>
+                <configuration>
+                    <excludes>
+                        <exclude>**/shim/**</exclude>
+                    </excludes>
+                </configuration>
+            </plugin>
             <plugin>
                 <artifactId>maven-assembly-plugin</artifactId>
                 <configuration>
